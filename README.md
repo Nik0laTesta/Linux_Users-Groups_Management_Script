@@ -1,4 +1,4 @@
-Linux User & Group Management Script
+**Linux User & Group Management Script**
 
 Training project | Linux · Shell Scripting · System Administration
 
