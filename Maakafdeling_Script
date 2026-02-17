@@ -1,0 +1,395 @@
+l#Final?
+#This script is made as an assignment to learn basic shell scripting for the course "system and network administration".
+
+#There are alot of other programs that use ai or other tools to make writing code easier.
+#I wrote a script in those earlier and have to say I did not learn alot myself, since most of the coding is done by the editor.
+#Ai in those editors is a powerfull tool. But not great when trying to learn. 
+#Thats why I am starting over on this editor. It has nice features but does not help out too much.
+#I choose to use micro over nano because micro is more userfriendly and has some more tools with automatic syntax highlighting.
+#Check if you are running the right script!
+#I just spent 30mins trouble shooting after I saved to a new name and was still running the old script from history.
+#Lets Gooo
+
+#!/bin/sh
+
+start() {
+    clear
+    echo "Hallo, en Welkom."
+    sleep 1.5
+    echo "Dit script dient om op een gemakkelijke manier groepen en mensen toe te voegen aan het systeem."
+    sleep 1.5
+    echo "Het script is geschreven als opdracht voor de opleiding netwerk en systeem beheer."
+    sleep 1.5
+    echo "We gaan in dit script verder in het engels. Als je geen engels kunt vraag dan even een vriendje om je te helpen. ;)"
+    sleep 1.5
+    #the -d checks if the directory already exists, so if -d(directory) with /$name already exists then dont try adding it again.
+    if [ -d "/$name" ]; then
+        echo "this /$name directory already exists. Please give a new directory name."
+        read name
+        echo "dummy!"
+        sleep .3
+        clear
+        start
+    fi
+
+    echo "you have succesfully added /$name as a root directory"
+    sleep 1.5
+    echo "Hit enter to Continue."
+    #We dont need this variable, it is just used to wait for the user to hit enter. Whatever the user types gets stored in this variable.
+    #But since it is never called it does not really matter. 
+    read dummyvariable
+    clear
+    echo "Next we need the name of the group/department to which to add the users."
+    read group
+    echo "Is this information correct? (y/n)"
+    read answer
+    if [ "$answer" = "y" ]; then
+        #With this command we check if the group already exists. getent group checks the groups in the system.
+        #So if the group does not exist (! before the command) then we can create it.
+        #With the >/dev/null we send the output to null, so we dont see it on the screen. stdrin, stdout, stderr..
+        #Now we now the name of the group we can also create the directories.
+        #I know i already say i create the root directory at the start of the script,
+        #I purposely wait with creating the directories until we know the group name
+        #So I dont need to clean up a bunch of groups everytime I run the script.
+        if ! getent group "$group" >/dev/null; then
+            echo "Ok, creating group and directories."
+            mkdir "/$name"
+            mkdir "/$name/$group-RWdocs"
+            mkdir "/$name/$group-ROdocs"
+            #This command adds the group to the system with the name stored in the variable "group".
+            #And with the id starting from 3000 as stated in the assignment the -K flag is used to overwrite the default parameters for creating groups.
+            groupadd -K GID_MIN=3000 "$group"
+            sleep 1.5
+            echo "group created with id"
+            #This command shows the group info, so we can see the id and name. This is just for the assignment.
+            #I believe this can easily be put into the command above, but that seemed a bit tricky and overcomplicated
+            getent group "$group"
+            sleep 1.5
+
+        #If the group already exists we need to ask the user if he wants to rename it.
+        else
+            echo "this group already exists"
+            echo "do you want to rename? (y/n)"
+            read goagain
+            if [ "$goagain" = "y" ]; then
+                echo "ok butterfingers, mind your typing this time!"
+                sleep 2
+                echo "type the new group"
+                read group
+                echo "$group"
+                echo "Is this information correct? (y/n)"
+                read answer
+                if [ "$answer" = "y" ]; then
+                    #Again we check if the group exists, if not we create it.
+                    #This is actually the exact same block of code as above. So according to the coding gods we should put this in a function
+                    #and call that function when we need it. But I did not think about that and it was alot of work to completely rewrite this. :)
+                    if ! getent group "$group" >/dev/null; then
+                        echo "Ok, creating group and directories."
+                        mkdir "/$name"
+                        mkdir "/$name/$group-RWdocs"
+                        mkdir "/$name/$group-ROdocs"
+                        groupadd -K GID_MIN=3000 "$group"
+                        echo "group created with id"
+                        #This command shows the group info, so we can see the id and name.
+                        getent group "$group"
+
+                        sleep 1.5
+
+                    #The user typed the same name again, so we exit the script.
+                    else
+                        echo "this group still already exists, because you typed the same thing. "
+                        echo "take a second to think about it"
+                        sleep 4
+                        clear
+                        echo "DUMDUM!"
+                        sleep .3
+                        clear
+                        exit
+                    fi
+                else
+                    echo "exiting script"
+                    sleep 3
+                    exit
+                fi
+
+            else
+                echo "exiting script"
+                sleep 3
+                exit
+            fi
+
+        fi
+    else
+        echo "exiting script"
+        sleep 3
+        exit
+    fi
+    #Asking for the usernames. For this assignment I just ask for 3 users, 2 regular and 1 admin.
+    #I check if the user already exists, if so I ask if its the correct user.
+    #If so we move on, if not I ask for the name again. If the name also exists we exit the script.
+    #If the user does not exist we add it to the system.
+    #I could have put this in a function to make it cleaner, Also if the user were to make a mistake on the 2nd user adding and it would restart the script
+    #that would be some trouble, i tried solving this by asking if the user already existing is the correct user. But really there is no way to know
+    #when running this script if that user has the right permissions or has the right id's. If I used a function for adding users that could get fixed but
+    #I didnt have enough time to rewrite the entire thing again.
+    #clear
+    echo "Now lets add the users."
+    sleep 1.5
+    echo "First name only, No capital letters"
+    sleep 1
+    echo "name regular user 1?"
+    read user1
+    #So if user1 is in the passwd file it does already exist. So we cant add it again. Again the dev/null is to hide the output.
+    if getent passwd "$user1" >/dev/null; then
+        echo "User already exists. Is this the correct user? (y/n)"
+        read correct
+        if [ "$correct" = "y" ]; then
+            echo "great"
+            sleep 2
+        else
+            echo "type correct name"
+            read user1
+            if getent passwd "$user1" >/dev/null; then
+                echo "name also exists, perhaps take some time to think about it?"
+                sleep 5
+                echo "dummy!"
+                sleep .2
+                clear
+                exit
+            else
+                useradd -m -g "$group" -s /bin/bash -K UID_MIN=2500 "$user1"
+                passwd "$user1"
+                chage -d 0 "$user1"
+                chage -M 40 "$user1"
+            fi
+
+        fi
+
+    else
+        #If the user does not exist we add it. I was struggling with the command to add the user to the group. I was using adduser, 
+        #but after some searching foudn
+        #that useradd is better for scripting. adduser is more interactive and user friendly, but not for scripting.
+        #So with useradd we can use some flags, -m to create home directory, -g to add to group, -s to set shell.
+        #To set the dynamic uid starting from 2500 we can use the -K UID_MIN=2500 flag. Same as with groupadd.
+        useradd -m -g "$group" -s /bin/bash -K UID_MIN=2500 "$user1"
+        #the assignment wants us to prompt the user to set a password
+        passwd "$user1"
+        #And we need to have the user change the password at first login.
+        #I dont understand why we need to promt for a password if we have it change at first login. 
+        #We could also just set a temporary password I think in the code. Altough hardcoded passwords are not safe, 
+        #I think the person writing this would still need to use the users first name or some generic thing like that. idk
+        chage -d 0 "$user1"
+        #Then we needed to change the password every 40days.
+        chage -M 40 "$user1"
+    fi
+
+    #User2 and Admin are exactly the same as user1, that is why this code could be in a function to make it cleaner.
+    #If I remember correctly I could do something like for i in 1 2 3 and then call a function to add the users.
+    #I'd have to look it up.
+    #What would be best about putting it in a function is that I could call it again if I wanted to add more users.
+    #At the moment running this script it is only possible to add 3 users. And what if you added the first 2 correctly
+    #But then make a mistake and exit the script while adding the 3rd user?
+    #Then you have to start over again, but you cant add the first 2 users again because they already exist.
+    #Putting it in a function would solve that, atm I solved this particular problem by asking if the user is correct.
+    #So if you already added users you can just say they are correct and skip adding them again.
+    #But suppose the name is correct, but the group or premissions is wrong then you would have to manually change those.
+    #I just think that is a bit out of scope for this assignment.
+
+    echo "name regular user 2?"
+    read user2
+    if getent passwd "$user2" >/dev/null; then
+        echo "User already exists. Is this the correct user? (y/n)"
+        read correct
+        if [ "$correct" = "y" ]; then
+            echo "great, lets move on."
+            sleep 1
+
+        else
+            echo "type correct name"
+            read user2
+            if getent passwd "$user2" >/dev/null; then
+                echo "name also exists, perhaps take some time to think about it?"
+                sleep 5ls
+                
+                echo "dummy!"
+                sleep .2
+                clear
+                exit
+            else
+                useradd -m -g "$group" -s /bin/bash -K UID_MIN=2500 "$user2"
+                passwd "$user2"
+                chage -d 0 "$user2"
+                chage -M 40 "$user2"
+            fi
+        fi
+    else
+        #This is the same for as user1, I could probrably have this command as one line, but this is more clear for me.
+        useradd -m -g "$group" -s /bin/bash -K UID_MIN=2500 "$user2"
+        passwd "$user2"
+        chage -d 0 "$user2"
+        chage -M 40 "$user2"
+    fi
+    echo "name admin"
+    read admin
+    if getent passwd "$admin" >/dev/null; then
+        echo "Admin already exists, Is this the correct admin? (y/n)"
+        read correct
+        if [ "$correct" = "y" ]; then
+            echo "great"
+            sleep 2
+
+        else
+            echo "type correct name"
+            read admin
+            if getent passwd "$admin" >/dev/null; then
+                echo "name also exists, perhaps take some time to think about it?"
+                sleep 5
+                echo "dummy!"
+                sleep .2
+                clear
+                exit
+            else
+                useradd -m -g "$group" -s /bin/sh -K UID_MIN=5500 -K UID_MAX=5600 "$admin"
+                passwd "$admin"
+                chage -d 0 "$admin"
+                chage -M 40 "$admin"
+            fi
+        fi
+    else
+        #For the admin we need some different settings. The shell is /bin/sh and the uid needs to be between 5500 and 5600. But otherwise stays the same.
+        useradd -m -g "$group" -s /bin/sh -K UID_MIN=5500 -K UID_MAX=5600 "$admin"
+        passwd "$admin"
+        chage -d 0 "$admin"
+        chage -M 40 "$admin"
+
+    fi
+
+    #Now we need to set the premissions on the directories.
+    #The assignment states that the admin and group should be owner of the RO and RW directories.
+    #I didnt really understand what is meant by the andmin and group should be owner.
+    #After reading the course again I believe it means the admin should just be owner with his premissions, and then by setting premissions
+    #for the group we can give all the members of the group the correct premissions
+
+    chown "$admin":"$group" "/$name/$group-RWdocs"
+    chown "$admin":"$group" "/$name/$group-ROdocs"
+
+    #Now we need to set the permissions, following the assignment the admin should have read and write on both directories.
+    #The group users should have read and write on the RWdocs and all other users have only read rights.
+    #The gruop users should have only read rights on the ROdocs and all other users have no rights.
+    #So according to the course for the RWdocs that is 774 and for the ROdocs that is 740.
+    
+    chmod 775 "/$name/$group-RWdocs"
+    chmod 750 "/$name/$group-ROdocs"
+
+    #Now i also have to make sure a file can only be deleted by the owner or admin. I remember this being set with a sticky bit. 
+    #I did have to look it up agian.
+    
+    chmod +t "/$name/$group-RWdocs"
+    chmod +t "/$name/$group-ROdocs"
+
+    #Ok now we need to add a file called demodoc.txt to new root directory saying something like "this directory was created by script a script".
+    #But lets also add the date and time it was created, and the name of the argument given with the script.
+    #Perhaps I could also add the names and id's of the users and group created for more info.
+    
+    echo "This file was created by a script for the system and network administration course at VDAB." >"/$name/demodoc.txt"
+    echo "This file was created on: $(date)" >>"/$name/demodoc.txt"
+    echo "This date is probably wrong, because I setup this vm with english setting and it did not have out timezone. And I didnt get to fixing it." >>"/$name/demodoc.txt"
+    echo "The name of the root directory is: $name" >>"/$name/demodoc.txt"
+    echo "The name of the group is: $group" >>"/$name/demodoc.txt"
+    echo "The name and id of the admin is: $admin with id: $(id -u $admin)" >>"/$name/demodoc.txt"
+    echo "The name and id of regular user 1 is: $user1 with id: $(id -u $user1)" >>"/$name/demodoc.txt"
+    echo "The name and id of regular user 2 is: $user2 with id: $(id -u $user2)" >>"/$name/demodoc.txt"
+    echo "Thank you for using this script." >>"/$name/demodoc.txt"
+    sleep 2
+
+    echo "Users and docs are created, premissions are set."
+    sleep 5
+    clear
+    echo "Now some info from the system as per the assignment."
+    sleep 2
+    #Now we still need to have to print some info to the shell.
+    #The assignment asks to
+    #Print the first 5 groups from the group file. in alphabetical order.
+    echo "The first 5 groups in the group file, in alphabetical order are:"
+    head -n 5 /etc/group | sort
+    echo ""
+    sleep 4
+    #Then print last 4 users in the user file in reverse alphabetical order.
+    echo "The last 4 users in the passwd file are:"
+    tail -n 4 /etc/passwd | sort -r
+    echo ""
+    sleep 4
+    #Then print all users from the user file where the name starts with "sys"
+    echo "All users starting with sys are:"
+    grep "^sys" /etc/passwd
+    echo ""
+    sleep 4
+    #Show the long directory including hidden files rights and owners of the new root directory.
+    echo "The details of the new root directory are:"
+    ls -la "/$name"
+    echo ""
+    sleep 4
+
+    #Now finally we need to show a fun message saying the script ran succesfully and then exit.
+    #Lets use some ascii art fort this saying Beeey. :)
+
+    echo "Script ran succesfully (I Hope), Beeey!"
+echo '        .---. '
+echo '       /     \ '
+echo '       \.@-@./ '
+echo '       /`\_/`\ '
+echo '      //  _  \\ '
+echo '     | \     )|_ '
+echo '    /`\_`>  <_/ \ '
+echo '    \__/'---'\__/ '
+    sleep 4
+    exit
+
+}
+
+#Start of script
+clear
+#this checks if the user is sudo/root. root has an id of 0 so if id of -user is not equal to 0 then exit
+if [ "$(id -u)" -ne 0 ]; then
+    echo "You need priviledge to add users and groups. Please run with sudo."
+    sleep 3
+    exit 1
+fi
+
+#Checking if there are any arguments given with the script, this argument is supposed to be the name of the folder we need to create at /root.
+#If number of arguments ($#) is not equal to 1 then no arguments, or to many arguments were given so we error out.
+if [ $# -ne 1 ]; then
+    echo "you have not given the name of the directories, or you have given to many names."
+    sleep 3
+    echo "Please provide the name of the root directory when running this script. No spaces."
+    sleep 3
+    echo "ERROR ERROR ERROR ERROR ERROR ERROR ERROR ERROR ERROR ERROR ERROR ERROR ERROR ERROR"
+    sleep 2
+    echo "exiting script!"
+    sleep 1
+    echo "dummmy"
+    sleep 0.3
+    clear
+    exit 1
+fi
+
+#This assigns the argument given with the command to the variable "name", for use later in the script.
+#So first we check if there is a variable given, then if it is one word and then whe assign that variable to "name"
+name="$@"
+
+#read name
+#This is where the script actually starts, after checking if the user gave an argument and is Root.
+#It needs to be in the back so the functions are defined before we actually call them.
+#Here we say to run "start" function.
+#We could just let the program run without a function, so it just runs line by line.
+#The first problem I came across with that is that if I wanted to run the script again, I would have to restart the whole script.
+#This way I can just call the start function again.
+#I was working on this a but to long, and i know it is not the correct way to do it, for this assignment it will do.
+#But if this was a real script I would have to put al the different parts in different functions and call them when needed.
+#So there would be a function to add users, a function to add groups, a function to create directories etc.
+#I liked this assignment, so I might come back to it later and do it still.
+
+#To make a script executable, use: chmod +x script.sh
+#To run the script, use: ./script.sh
+
+start
