@@ -1,6 +1,6 @@
 ```bash
-
-l#Final?
+#!/bin/sh
+#Final?
 #This script is made as an assignment to learn basic shell scripting for the course "system and network administration".
 
 #There are alot of other programs that use ai or other tools to make writing code easier.
@@ -12,7 +12,7 @@ l#Final?
 #I just spent 30mins trouble shooting after I saved to a new name and was still running the old script from history.
 #Lets Gooo
 
-#!/bin/sh
+
 
 start() {
     clear
