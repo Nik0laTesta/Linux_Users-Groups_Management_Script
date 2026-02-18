@@ -1,3 +1,5 @@
+```bash
+
 l#Final?
 #This script is made as an assignment to learn basic shell scripting for the course "system and network administration".
 
@@ -393,3 +395,4 @@ name="$@"
 #To run the script, use: ./script.sh
 
 start
+```
